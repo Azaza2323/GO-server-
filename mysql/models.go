@@ -24,3 +24,8 @@ type Book struct {
 	Category    string `json:"category"`
 	Image       string `json:"image"`
 }
+
+type UserBooks struct {
+	UserID int `json:"user_id"`
+	BookID int `json:"book_id"`
+}

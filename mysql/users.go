@@ -24,6 +24,42 @@ func (u *UserModel) Insert(name, email, password string) error {
 	return nil
 }
 
+func (m *UserModel) GetByID(id int) (*User, error) {
+	stmt := `SELECT id, name, email, hashed_password FROM users WHERE id = ?`
+	user := &User{}
+	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (m *UserModel) Update(id int, name, email, password string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	stmt := `UPDATE users SET name = ?, email = ?, hashed_password = ? WHERE id = ?`
+	_, err = m.DB.Exec(stmt, name, email, hashedPassword, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) Delete(id int) error {
+	stmt := `DELETE FROM users WHERE id = ?`
+	_, err := m.DB.Exec(stmt, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *UserModel) Authenticate(email, password string) (int, error) {
 	var id int
 	var hashedPassword []byte

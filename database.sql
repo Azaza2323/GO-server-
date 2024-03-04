@@ -20,6 +20,15 @@ CREATE TABLE books (
                        image TEXT
 );
 
+CREATE TABLE user_books (
+                            user_id INT NOT NULL,
+                            book_id BIGINT UNSIGNED NOT NULL,
+                            PRIMARY KEY (user_id, book_id),
+                            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+                            FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
+);
+
+
 INSERT INTO books (name, author, description, category, image) VALUES
                                                                    ('Book 1', 'Author 1', 'Description for Book 1', 'Fiction', 'https://example.com/image1.jpg'),
                                                                    ('Book 2', 'Author 2', 'Description for Book 2', 'Non-Fiction', 'https://example.com/image2.jpg'),

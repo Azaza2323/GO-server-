@@ -11,17 +11,19 @@ import (
 )
 
 type application struct {
-	debug    bool
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	users    *mysql.UserModel
-	books    *mysql.BookModel
+	debug     bool
+	errorLog  *log.Logger
+	infoLog   *log.Logger
+	users     *mysql.UserModel
+	books     *mysql.BookModel
+	userBooks *mysql.UserBooksModel
 }
 
 func main() {
 	addr := flag.String("addr", ":1111", "HTTP network address")
 	debug := flag.Bool("debug", false, "Enable debug mode")
-	dsn := flag.String("dsn", "root:123123@/bookstore?parseTime=true", "Main Data")
+	dsn := flag.String("dsn", "root:123123@tcp(localhost:3307)/bookstore?parseTime=true", "Main Data")
+
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -33,11 +35,12 @@ func main() {
 	}
 	defer db.Close()
 	app := &application{
-		debug:    *debug,
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		users:    &mysql.UserModel{DB: db},
-		books:    &mysql.BookModel{DB: db},
+		debug:     *debug,
+		errorLog:  errorLog,
+		infoLog:   infoLog,
+		users:     &mysql.UserModel{DB: db},
+		books:     &mysql.BookModel{DB: db},
+		userBooks: &mysql.UserBooksModel{DB: db},
 	}
 
 	handler := app.routes()
@@ -55,6 +58,7 @@ func main() {
 		errorLog.Fatal(err)
 	}
 }
+
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -65,12 +69,17 @@ func openDB(dsn string) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
 func corsHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return

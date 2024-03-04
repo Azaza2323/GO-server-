@@ -40,17 +40,18 @@ func (b *BookModel) GetID(id int) ([]*Book, error) {
 	return bookList, nil
 }
 
-func (b *BookModel) Delete(id int) error {
-	stmt := `DELETE FROM books WHERE id=?`
-	_, err := b.DB.Exec(stmt, id)
+func (b *BookModel) Insert(name, author, description, category, image string) error {
+	stmt := `INSERT INTO books (name, author, description, category, image) VALUES (?, ?, ?, ?, ?)`
+	_, err := b.DB.Exec(stmt, name, author, description, category, image)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (b *BookModel) Insert(name, author, description, category, image string) error {
-	stmt := `INSERT INTO books (name, author, description, category, image) VALUES (?, ?, ?, ?, ?)`
-	_, err := b.DB.Exec(stmt, name, author, description, category, image)
+
+func (b *BookModel) Delete(id int) error {
+	stmt := `DELETE FROM books WHERE id=?`
+	_, err := b.DB.Exec(stmt, id)
 	if err != nil {
 		return err
 	}
