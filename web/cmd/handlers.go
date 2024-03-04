@@ -141,3 +141,12 @@ func (a *application) InsertBook(c *gin.Context) {
 
 	c.Status(http.StatusCreated)
 }
+func (a *application) DeleteBook(c *gin.Context) {
+	id := c.Param("id")
+	bookId, _ := strconv.Atoi(id)
+	if err := a.books.Delete(bookId); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusCreated)
+}

@@ -13,6 +13,7 @@ func (a *application) routes() http.Handler {
 	r.GET("/:id", a.getBookByID)
 	r.DELETE("/:id", a.deleteBookByID)
 	r.POST("/create", a.InsertBook)
-
+	r.POST("/admin/create", a.InsertBook)
+	r.DELETE("/admin/delete/:id", a.DeleteBook)
 	return r
 }
