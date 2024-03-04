@@ -1,36 +1,35 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func (a *application) GetUserProfile(c *gin.Context) {
-	userID, _ := c.Get("id")
-
-	id, err := strconv.Atoi(userID.(string))
+	// Извлекаем ID пользователя из параметра пути
+	userIDParam := c.Param("id")
+	userID, err := strconv.Atoi(userIDParam)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	user, err := a.users.GetByID(id)
+	// Получаем данные пользователя
+	user, err := a.users.GetByID(userID)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Unable to retrieve user profile"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	response := struct {
-		ID    int    `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
-		Role  string `json:"role"`
-	}{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+	// Получаем список книг, связанных с пользователем
+	books, err := a.userBooks.GetBooksByUserID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Отправляем профиль пользователя и список книг в ответе
+	c.JSON(http.StatusOK, gin.H{"user": user, "books": books})
 }

@@ -4,6 +4,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/net/context"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 func (a *application) Authenticate(next http.Handler) http.Handler {
@@ -14,7 +16,7 @@ func (a *application) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		tokenString := authorizationHeader[len("Bearer "):]
+		tokenString := strings.TrimPrefix(authorizationHeader, "Bearer ")
 
 		claims := &Claims{}
 
@@ -23,11 +25,7 @@ func (a *application) Authenticate(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -36,7 +34,13 @@ func (a *application) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "user", claims.UserID)
+		userID, err := strconv.Atoi(claims.UserID)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "user_id", userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

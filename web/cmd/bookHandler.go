@@ -9,7 +9,6 @@ import (
 	"strconv"
 )
 
-// getAllBooks - получение списка всех книг
 func (a *application) getAllBooks(c *gin.Context) {
 	books, err := a.books.Get()
 	if err != nil {
@@ -19,7 +18,6 @@ func (a *application) getAllBooks(c *gin.Context) {
 	c.JSON(http.StatusOK, books)
 }
 
-// getBookByID - получение книги по ID
 func (a *application) getBookByID(c *gin.Context) {
 	id := c.Param("id")
 	bookID, err := strconv.Atoi(id)
@@ -39,7 +37,6 @@ func (a *application) getBookByID(c *gin.Context) {
 	c.JSON(http.StatusOK, book)
 }
 
-// deleteBookByID - удаление книги по ID
 func (a *application) deleteBookByID(c *gin.Context) {
 	id := c.Query("id")
 	bookID, err := strconv.Atoi(id)
@@ -57,7 +54,6 @@ func (a *application) deleteBookByID(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// InsertBook - добавление новой книги
 func (a *application) InsertBook(c *gin.Context) {
 	var book models.Book
 	if err := c.BindJSON(&book); err != nil {

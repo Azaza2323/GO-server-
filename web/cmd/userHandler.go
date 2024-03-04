@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	models "server/mysql"
@@ -31,7 +32,11 @@ func (a *application) GetUser(c *gin.Context) {
 
 	user, err := a.users.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 

@@ -26,19 +26,17 @@ func (ub *UserBooksModel) Delete(userID, bookID int) error {
 	return nil
 }
 
-func (ub *UserBooksModel) GetByUserID(userID int) ([]*Book, error) {
-	stmt := `SELECT b.id, b.name, b.author, b.description, b.category, b.image
-             FROM books b
-             INNER JOIN user_books ub ON b.id = ub.book_id
-             WHERE ub.user_id = ?`
+func (m *UserBooksModel) GetBooksByUserID(userID int) ([]*Book, error) {
+	stmt := `SELECT b.id, b.name, b.author, b.description, b.category, b.image FROM books b INNER JOIN user_books ub ON b.id = ub.book_id WHERE ub.user_id = ?`
 
-	rows, err := ub.DB.Query(stmt, userID)
+	rows, err := m.DB.Query(stmt, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var books []*Book
+	books := []*Book{}
+
 	for rows.Next() {
 		b := &Book{}
 		err := rows.Scan(&b.ID, &b.Name, &b.Author, &b.Description, &b.Category, &b.Image)
@@ -47,6 +45,7 @@ func (ub *UserBooksModel) GetByUserID(userID int) ([]*Book, error) {
 		}
 		books = append(books, b)
 	}
+
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}

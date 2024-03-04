@@ -24,14 +24,11 @@ func (u *UserModel) Insert(name, email, password string) error {
 	return nil
 }
 
-func (m *UserModel) GetByID(id int) (*User, error) {
-	stmt := `SELECT id, name, email, hashed_password FROM users WHERE id = ?`
+func (m *UserModel) GetByID(userID int) (*User, error) {
+	stmt := `SELECT id, name, email, role FROM users WHERE id = ?`
 	user := &User{}
-	err := m.DB.QueryRow(stmt, id).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+	err := m.DB.QueryRow(stmt, userID).Scan(&user.ID, &user.Name, &user.Email, &user.Role)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("user not found")
-		}
 		return nil, err
 	}
 	return user, nil
