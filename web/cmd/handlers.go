@@ -14,8 +14,9 @@ import (
 var jwtKey = []byte("your-secret-key")
 
 type Claims struct {
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	UserID   string `json:"user_id"`
+	Role     string `json:"role"`
+	UserName string `json:"user_name"`
 	jwt.StandardClaims
 }
 
@@ -56,11 +57,16 @@ func (a *application) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	name, err := a.users.GetName(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
-		UserID: strconv.Itoa(userID),
-		Role:   role,
+		UserID:   strconv.Itoa(userID),
+		UserName: name,
+		Role:     role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -72,8 +78,8 @@ func (a *application) Login(c *gin.Context) {
 		return
 	}
 
-	user.Password = "" // Remove password before sending response
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user, "role": role})
+	user.Password = ""
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "userId": user, "role": role, "userName": name})
 }
 
 func (a *application) getAllBooks(c *gin.Context) {

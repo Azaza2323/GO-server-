@@ -7,7 +7,6 @@ import (
 
 func (a *application) routes() http.Handler {
 	r := gin.Default()
-
 	r.POST("/login", a.Login)
 	r.POST("/register", a.Register)
 	r.GET("/", a.getAllBooks)

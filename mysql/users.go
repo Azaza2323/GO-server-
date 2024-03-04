@@ -59,3 +59,14 @@ func (u *UserModel) GetRole(id int) (string, error) {
 	}
 	return role, nil
 }
+
+func (u *UserModel) GetName(id int) (string, error) {
+	stmt := `SELECT name FROM users WHERE id=?`
+	row := u.DB.QueryRow(stmt, id)
+	var name string
+	err := row.Scan(&name)
+	if err != nil {
+		return "", err
+	}
+	return name, nil
+}
