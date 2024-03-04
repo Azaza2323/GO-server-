@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type BookModel struct {
@@ -25,19 +26,24 @@ func (b *BookModel) Get() ([]*Book, error) {
 	}
 	return bookList, nil
 }
-func (b *BookModel) GetID(id int) ([]*Book, error) {
+func (b *BookModel) GetSingleBook(id int) (*Book, error) {
 	stmt := `SELECT * FROM books WHERE id = ?`
-	result, _ := b.DB.Query(stmt, id)
-	var bookList []*Book
-	for result.Next() {
-		n := &Book{}
-		err := result.Scan(&n.ID, &n.Name, &n.Author, &n.Description, &n.Category, &n.Image)
+	result, err := b.DB.Query(stmt, id)
+	if err != nil {
+		return nil, err
+	}
+	defer result.Close()
+
+	var book Book
+	if result.Next() {
+		err := result.Scan(&book.ID, &book.Name, &book.Author, &book.Description, &book.Category, &book.Image)
 		if err != nil {
 			return nil, err
 		}
-		bookList = append(bookList, n)
+		return &book, nil
 	}
-	return bookList, nil
+
+	return nil, errors.New("no book found with that ID")
 }
 
 func (b *BookModel) Delete(id int) error {

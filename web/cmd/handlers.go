@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -98,7 +99,7 @@ func (a *application) getBookByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
 		return
 	}
-	book, err := a.books.GetID(bookID)
+	book, err := a.books.GetSingleBook(bookID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
@@ -138,6 +139,7 @@ func (a *application) InsertBook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Printf("Received book data: %+v\n", book)
 
 	c.Status(http.StatusCreated)
 }
