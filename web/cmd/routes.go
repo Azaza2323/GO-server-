@@ -10,10 +10,20 @@ func (a *application) routes() http.Handler {
 
 	r.POST("/login", a.Login)
 	r.POST("/register", a.Register)
-	r.GET("/", a.getAllBooks)
-	r.GET("/:id", a.getBookByID)
-	r.DELETE("/:id", a.deleteBookByID)
-	r.POST("/create", a.InsertBook)
+	auth := r.Group("/").Use(isAuth())
+	{
+		auth.GET("/profile/:id", a.GetUserProfile)
+		auth.GET("/reviews/:id", a.GetReviews)
+		auth.GET("/", a.getAllBooks)
+		auth.GET("/:id", a.getBookByID)
+		auth.PUT("/profile/:id", a.UpdateFeedback)
+		auth.POST("/add/:id", a.AddBookToUser)
+		auth.POST("/create", isAdmin(), a.InsertBook)
+		auth.DELETE("/:id", isAdmin(), a.deleteBookByID)
+		auth.POST("/admin/create", isAdmin(), a.InsertBook)
+		auth.DELETE("/admin/delete/:id", isAdmin(), a.DeleteBook)
+		auth.GET("/category/:category", a.getBooksByCategory)
+	}
 
 	return r
 }
