@@ -59,18 +59,33 @@ func (a *application) DeleteUser(c *gin.Context) {
 }
 
 func (a *application) AddBookToUser(c *gin.Context) {
-	userID, _ := strconv.Atoi(c.MustGet("user").(string))
-
-	var book struct {
-		BookID int `json:"book_id"`
-	}
-	if err := c.BindJSON(&book); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+	userIDInterface, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID not found"})
 		return
 	}
 
-	err := a.userBooks.Add(userID, book.BookID)
+	userIDStr, ok := userIDInterface.(string)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID should be a string"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
+		return
+	}
+
+	bookID, err := strconv.Atoi(c.Param("bookID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Book ID"})
+		return
+	}
+
+	err = a.userBooks.Add(userID, bookID)
+	if err != nil {
+		a.errorLog.Printf("Could not add the book: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not add the book"})
 		return
 	}

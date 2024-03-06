@@ -57,3 +57,26 @@ func (b *BookModel) Delete(id int) error {
 	}
 	return nil
 }
+
+func (b *BookModel) GetByCategory(category string) ([]*Book, error) {
+	stmt := `SELECT * FROM books WHERE category = ?`
+	rows, err := b.DB.Query(stmt, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var books []*Book
+	for rows.Next() {
+		book := &Book{}
+		err := rows.Scan(&book.ID, &book.Name, &book.Author, &book.Description, &book.Category, &book.Image)
+		if err != nil {
+			return nil, err
+		}
+		books = append(books, book)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return books, nil
+}

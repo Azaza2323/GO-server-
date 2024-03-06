@@ -15,12 +15,16 @@ func (a *application) routes() http.Handler {
 	r.GET("/", a.getAllBooks)
 	r.GET("/:id", a.getBookByID)
 	r.POST("/create", a.InsertBook)
-	// The routes below were modified or added to resolve the conflict
-	r.DELETE("/:id", a.deleteBookByID)   // Kept from HEAD
-	r.GET("/users/:id", a.GetUser)       // Kept from HEAD
-	r.DELETE("/users/:id", a.DeleteUser) // Kept from HEAD
 
-	r.POST("/admin/create", a.InsertBook)       // Added from origin/azamat
-	r.DELETE("/admin/delete/:id", a.DeleteBook) // Added from origin/azamat
+	r.GET("/users/:id", a.GetUser)
+	r.DELETE("/users/:id", a.DeleteUser)
+
+	r.POST("/admin/create", a.InsertBook)
+	r.DELETE("/admin/delete/:id", a.DeleteBook)
+
+	r.GET("/category/:category", a.getBooksByCategory)
+
+	r.POST("/read/:bookID", a.AddBookToUser)
+
 	return r
 }

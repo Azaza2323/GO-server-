@@ -37,23 +37,6 @@ func (a *application) getBookByID(c *gin.Context) {
 	c.JSON(http.StatusOK, book)
 }
 
-func (a *application) deleteBookByID(c *gin.Context) {
-	id := c.Query("id")
-	bookID, err := strconv.Atoi(id)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
-		return
-	}
-
-	err = a.books.Delete(bookID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Status(http.StatusOK)
-}
-
 func (a *application) DeleteBook(c *gin.Context) {
 	id := c.Param("id")
 	bookId, _ := strconv.Atoi(id)
@@ -77,4 +60,14 @@ func (a *application) InsertBook(c *gin.Context) {
 	}
 
 	c.Status(http.StatusCreated)
+}
+
+func (a *application) getBooksByCategory(c *gin.Context) {
+	category := c.Param("category")
+	books, err := a.books.GetByCategory(category)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, books)
 }
