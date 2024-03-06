@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	models "server/mysql"
@@ -77,4 +78,35 @@ func (a *application) InsertBook(c *gin.Context) {
 	}
 
 	c.Status(http.StatusCreated)
+}
+func (a *application) GetReviews(c *gin.Context) {
+	fmt.Println("GetReviews called")
+	bookIDParam := c.Param("id")
+	bookID, err := strconv.Atoi(bookIDParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
+		return
+	}
+
+	reviews, err := a.userBooks.GetReviews(bookID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(reviews) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "No reviews found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, reviews)
+}
+func (a *application) getBooksByCategory(c *gin.Context) {
+	category := c.Param("category")
+	books, err := a.books.GetByCategory(category)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, books)
 }

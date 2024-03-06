@@ -22,7 +22,7 @@ type application struct {
 func main() {
 	addr := flag.String("addr", ":1111", "HTTP network address")
 	debug := flag.Bool("debug", false, "Enable debug mode")
-	dsn := flag.String("dsn", "root:123123@tcp(localhost:3307)/bookstore?parseTime=true", "Main Data")
+	dsn := flag.String("dsn", "root:123123@/bookstore?parseTime=true", "Main Data")
 
 	flag.Parse()
 

@@ -2,45 +2,52 @@ package main
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/net/context"
+	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-func (a *application) Authenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authorizationHeader := r.Header.Get("Authorization")
-		if authorizationHeader == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+func isAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		splitToken := strings.Split(authHeader, "Bearer ")
+		if len(splitToken) != 2 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized - Token format incorrect"})
+			c.Abort()
 			return
 		}
+		tokenString := splitToken[1] // Get the token string after "Bearer "
 
-		tokenString := strings.TrimPrefix(authorizationHeader, "Bearer ")
-
-		claims := &Claims{}
-
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
 
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized - Token parse error"})
+			c.Abort()
 			return
 		}
 
-		if !token.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+			c.Set("userID", claims.UserID)
+			c.Set("role", claims.Role)
+			c.Next()
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized - Token invalid"})
+			c.Abort()
 			return
 		}
+	}
+}
 
-		userID, err := strconv.Atoi(claims.UserID)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+func isAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			c.Abort()
 			return
 		}
-
-		ctx := context.WithValue(r.Context(), "user_id", userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		c.Next()
+	}
 }

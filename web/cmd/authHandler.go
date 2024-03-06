@@ -18,25 +18,37 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func (a *application) Login(c *gin.Context) {
-	var user models.User
-	if err := c.BindJSON(&user); err != nil {
+func (a *application) Register(c *gin.Context) {
+	var requestBody struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	userID, err := a.users.Authenticate(user.Email, user.Password)
+	if err := a.users.Insert(requestBody.Name, requestBody.Email, requestBody.Password); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusCreated)
+}
+func (a *application) Login(c *gin.Context) {
+	var requestBody struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	userID, role, err := a.users.Authenticate(requestBody.Email, requestBody.Password)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCredentials) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid credentials"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	role, err := a.users.GetRole(userID)
-	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -56,6 +68,6 @@ func (a *application) Login(c *gin.Context) {
 		return
 	}
 
-	user.Password = ""
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user, "role": role})
+	requestBody.Password = ""
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": userID, "role": role})
 }
